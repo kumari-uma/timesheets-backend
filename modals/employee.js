@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
+const jwt = require("jsonwebtoken");
+// const config = require("./configurations/config");
 const app = express();
 var Connection = require("tedious").Connection;
 var Request = require("tedious").Request;
@@ -21,15 +23,16 @@ var config = {
     },
     type: "default"
   },
-  server: "yashtesting.database.windows.net",
+  server: jsonContent.server,
   options: {
-    database: "timesheets",
+    database: jsonContent.database,
     encrypt: true
   }
 };
 
 router.post("/employee", (req, res, next) => {
   var connection = new Connection(config);
+
 
   // Attempt to connect and execute queries if connection goes through
   connection.on("connect", function(err) {
@@ -42,15 +45,14 @@ router.post("/employee", (req, res, next) => {
   });
 
   function queryDatabase() {
-    var data = req.body;
-    console.log(data);
-    var emp_id = data.employee_id;
-    var name = data.name;
-    var title = data.Title;
-    var team = data.Team;
-    var manager = data.manager;
-    var manager_emp_id = data.manager_id;
-    var asset_type = data.asset_type;
+    var data = req.body; 
+    var emp_id = data.data.emp_id;
+    var name = data.data.name;
+    var title = data.data.title;
+    var team = data.data.team;
+    var manager = data.data.manager;
+    var manager_emp_id = data.data.manager_id;
+    var asset_type = data.data.asset_type;
 
     var query1 =
       "UPDATE EMPLOYEES SET name='" +
@@ -67,11 +69,9 @@ router.post("/employee", (req, res, next) => {
       asset_type +
       "' where emp_id='" +
       emp_id +
-      "'";
-
+      "'"; 
     var request = new Request(query1, function(err, rowCount, rows) {
-       
-      console.log("update is called");
+    
     });
 
     request.on("row", function(columns) {
@@ -85,7 +85,32 @@ router.post("/employee", (req, res, next) => {
 
 router.post("/emp", (req, res, next) => {
   console.log(req.body.data);
+
+
+  
   var connection = new Connection(config);
+
+
+  
+      if (req.body.username === "aymen") {
+        if (req.body.password === 123) {
+          //if eveything is okey let's create our token
+
+          const payload = {
+            check: true
+          };
+
+          var token = jwt.sign(payload, app.get("Secret"), {
+            expiresIn: 1440 // expires in 24 hours
+          });
+
+          res.json({
+            message: "authentication done ",
+            token: token
+          });
+        }
+      }
+
   var new_data = [];
 
   connection.on("connect", function(err) {
@@ -101,17 +126,17 @@ router.post("/emp", (req, res, next) => {
 
     var query1 = "SELECT * FROM EMPLOYEES WHERE  emp_id='" + emp_id + "';";
 
-    var request = new Request(query1, function(err,rowCount, rows) {
 
-      
+
+    var request = new Request(query1, function(err, rowCount, rows) {
       console.log(rowCount);
-      
+
       if (rowCount == 0) {
-        query ="INSERT INTO EMPLOYEES VALUES('" + emp_id + "','','','','','','');";
-        
+        query =
+          "INSERT INTO EMPLOYEES VALUES('" + emp_id + "','','','','','','');";
 
         var request = new Request(query, function(err, rowCount, rows) {
-          console.log("user inserted");
+           
         });
 
         request.on("row", function(columns) {
@@ -120,10 +145,8 @@ router.post("/emp", (req, res, next) => {
           });
         });
         connection.execSql(request);
-      }
-       else {
-        res.send(new_data);
-        console.log("else is called")
+      } else {
+        res.send(new_data); 
       }
     });
     request.on("row", function(columns) {
@@ -142,4 +165,4 @@ router.post("/emp", (req, res, next) => {
   }
 });
 
-module.exports = router; //the router with routes is exported and can be used in other files
+module.exports = router;  

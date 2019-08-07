@@ -1,4 +1,6 @@
 {
     "userName":"yash",
-    "password":"Myageis@20"
+    "password":"Myageis@20",
+    "server": "yashtesting.database.windows.net",
+    "database": "timesheets"
 }

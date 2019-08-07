@@ -1,5 +1,10 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const jwt    = require('jsonwebtoken');
+// const config = require('./configurations/config');
+
+
+  
 // const mongoose = require('mongoose');
 const app = express();
 const cors = require("cors");
@@ -19,18 +24,28 @@ app.use(bodyParser.json());
      extended: true
    })
  );
+ 
 
 const employeeRoutes = require("./modals/employee");
 const timesheetRoutes = require("./modals/timesheets");
 const projectRoutes = require("./modals/project");
 const adminRoutes = require("./modals/admin_timesheets");
+const admininfoRoutes = require("./modals/admin_info");
+
+// app.set("Secret", config.secret);
 
 app.use("/employee", employeeRoutes);
 
 app.use("/admin", adminRoutes);
 app.use("/timesheet", timesheetRoutes);
 app.use("/project", projectRoutes);
+app.use("/admin_info", admininfoRoutes);
 
+
+
+
+// console.log(token);
+ 
  
 app.use((req, res, next) => {
   const error = new Error("not found");
@@ -40,3 +55,4 @@ app.use((req, res, next) => {
 
 
 module.exports = app;
+ //https://dev.to/medaymentn/securing-your-node-js-api-with-json-web-token-5o5

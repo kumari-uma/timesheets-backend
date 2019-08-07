@@ -7,6 +7,7 @@ var Request = require("tedious").Request;
 var Request = require("tedious").Request;
 var Request = require("tedious").Request;
 var fs = require("fs");
+
 app.use(bodyParser.json());
 //reading the authentication file to get the username and password
 var contents = fs.readFileSync("authentication.json");
@@ -29,56 +30,10 @@ var config = {
   }
 };
 
-
- router.get("/approve_timesheets", (req, res, next) => {
-   var new_data = {};
-   var dataget = [];
-
-   var connection = new Connection(config);
-
-   connection.on("connect", function(err) {
-     if (err) {
-       console.log(err);
-     } else {
-       queryDatabase();
-       console.log("database connected");
-     }
-   });
-   function queryDatabase() { 
-     var query1 =
-       "SELECT * FROM TIMESHEETS ";
-
-     var request = new Request(query1, function(
-       err,
-       recordset,
-       rowCount,
-       rows
-     ) {
-       res.send(dataget);
-     });
-
-     request.on("row", function(columns) {
-       columns.forEach(function(column) {
-         var column_name = column.metadata.colName;
-         var column_data = column.value;
-
-         new_data[column_name] = column_data;
-       });
-
-       dataget.push(new_data);
-       new_data = {};
-     });
-
-     connection.execSql(request);
-   }
- });
-
-
-router.get("/view_timesheets", (req, res, next) => {
-  var new_data = {};
-  var dataget = [];
-
+router.post("/admin_info", (req, res, next) => {
+  console.log(req.body.data);
   var connection = new Connection(config);
+  var new_data = [];
 
   connection.on("connect", function(err) {
     if (err) {
@@ -89,23 +44,42 @@ router.get("/view_timesheets", (req, res, next) => {
     }
   });
   function queryDatabase() {
-    var query1 =
-      "SELECT *,cast([bill_date] As varchar(12))  As bill_date FROM TIMESHEETS";
+    var emp_id = req.body.data;
 
-    var request = new Request(query1, function(err, recordset, rowCount, rows) {
-      res.send(dataget);
+    var query1 = "SELECT * FROM EMPLOYEES WHERE  emp_id='" + emp_id + "';";
+
+    var request = new Request(query1, function(err, rowCount, rows) {
+      console.log(rowCount);
+
+      if (rowCount == 0) {
+        query =
+          "INSERT INTO EMPLOYEES VALUES('" + emp_id + "','','','','','','');";
+
+        var request = new Request(query, function(err, rowCount, rows) {
+          console.log("user inserted");
+        });
+
+        request.on("row", function(columns) {
+          columns.forEach(function(column) {
+            console.log("%s\t%s", column.metadata.colName, column.value);
+          });
+        });
+        connection.execSql(request);
+      } else {
+        res.send(new_data);
+        console.log("else is called");
+      }
     });
-
     request.on("row", function(columns) {
       columns.forEach(function(column) {
         var column_name = column.metadata.colName;
         var column_data = column.value;
 
-        new_data[column_name] = column_data;
+        new_data.push({
+          column_name: column_name,
+          column_data: column_data
+        });
       });
-
-      dataget.push(new_data);
-      new_data = {};
     });
 
     connection.execSql(request);
@@ -113,8 +87,4 @@ router.get("/view_timesheets", (req, res, next) => {
 });
 
 
-
-
-
 module.exports = router; //the router with routes is exported and can be used in other files
-

@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/16be532f-d207-4d70-966d-c6ba9ad7d410/resourceGroups/Celebal-Timesheets-RG/providers/Microsoft.Web/sites/timesheetsbackend",
+    "appService.deploySubpath": ""
+}
